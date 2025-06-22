@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Camp Booking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Book Your Adventure Camp</h1>
+        <form id="bookingForm" action="{{ url_for('booking_form') }}" method="post">
+            <select name="location" id="location" required>
+                <option value="">Select Location</option>
+                {% for location in locations %}
+                <option value="{{ location.LocationID }}">{{ location.City }}</option>
+                {% endfor %}
+            </select>
+            <select name="camp" id="camp" required>
+                <option value="">Select Camp</option>
+            </select>
+
+            <div id="camp-details" style="display:none;">
+                <p id="camp-duration"></p>
+                <p id="camp-price"></p>
+            </div>
+
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="last_name" placeholder="Last Name" required>
+            <input type="date" name="dob" id="dob" required>
+            <input type="email" name="email" id="email" placeholder="Email" required>
+            <input type="text" name="phone" id="phone" placeholder="Phone Number" required>
+            <textarea name="medical_info" placeholder="Medical Information"></textarea>
+            <select name="meal_type" id="meal_type" required>
+                <option value="">Select Meal Type</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Breakfast and Lunch">Breakfast and Lunch</option>
+                <option value="Breakfast and Dinner">Breakfast and Dinner</option>
+                <option value="Lunch and Dinner">Lunch and Dinner</option>
+                <option value="All">All</option>
+                <option value="None">None</option>
+            </select>
+            <select name="dietary_preference" id="dietary_preference" required disabled>
+                <option value="" selected>Select Dietary Preference</option>
+                <option value="Veg">Veg</option>
+                <option value="Non-Veg">Non-Veg</option>
+                <option value="Vegan">Vegan</option>
+            </select>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#location').change(function() {
+                var locationID = $(this).val();
+                if (locationID) {
+                    $.ajax({
+                        url: '/get_camps',
+                        type: 'GET',
+                        data: { locationID: locationID },
+                        success: function(data) {
+                            $('#camp').empty();
+                            $('#camp').append('<option value="">Select Camp</option>');
+                            $.each(data.camps, function(index, camp) {
+                                $('#camp').append('<option value="' + camp.CampID + '">' + camp.CampName + '</option>');
+                            });
+                        },
+                        error: function() {
+                            alert('Error fetching camps.'); // Intentional error
+                        }
+                    });
+                } else {
+                    $('#camp').empty();
+                    $('#camp').append('<option value="">Select Camp</option>');
+                }
+            });
+
+            $('#camp').change(function() {
+                var campID = $(this).val();
+                if (campID) {
+                    $.ajax({
+                        url: '/get_camp_details',
+                        type: 'GET',
+                        data: { campID: campID },
+                        success: function(data) {
+                            $('#camp-duration').text('Duration: ' + data.duration + ' Days');
+                            $('#camp-price').text('Price: ₹' + data.price);
+                            $('#camp-details').show();
+                        },
+                        error: function() {
+                            alert('Error fetching camp details.'); // Intentional error
+                        }
+                    });
+                } else {
+                    $('#camp-details').hide();
+                }
+            });
+
+            $('#meal_type').change(function() {
+                var selectedMealType = $(this).val();
+                if (selectedMealType === "None") {
+                    $('#dietary_preference').val('');
+                    $('#dietary_preference').prop('disabled', true);
+                } else {
+                    $('#dietary_preference').prop('disabled', false);
+                }
+            });
+
+            $('#bookingForm').on('submit', function(e) {
+                var email = $('#email').val();
+                var phone = $('#phone').val();
+                var dob = new Date($('#dob').val());
+                var age = new Date().getFullYear() - dob.getFullYear();
+
+                // Validate email
+                if (!email.includes('@')) {
+                    alert('Please enter a valid email address that contains "@"');
+                    e.preventDefault();
+                    return;
+                }
+
+                // Validate phone number
+                if (phone.length !== 10) {
+                    alert('Please enter a valid phone number with 10 digits');
+                    e.preventDefault();
+                    return;
+                }
+
+                // Validate age
+                if (age < 12) {
+                    alert('You must be at least 12 years old to book this adventure camp.');
+                    e.preventDefault();
+                    return;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
