@@ -1,5 +1,5 @@
 
-## Camp Booling Management System
+## Camp Booking Management System
 
 This is a full-stack web application that allows users to book adventure camps by selecting their preferred location, meal plan, and entering necessary personal details.
 
